@@ -144,6 +144,7 @@ namespace Config {
     void     cfgSetU64(const char* path, uint64_t value);
 
     bool     cfgHasKey(const char* path);
+    void     cfgRemoveKey(const char* path);  // remove a key (no-op if it does not exist); call flush() to persist
 
     // ---- String Getters ----
     inline char* getWifiSSID() { return cfgGetStrAlloc(NVS_CONFIG_WIFI_SSID, CONFIG_ESP_WIFI_SSID); }

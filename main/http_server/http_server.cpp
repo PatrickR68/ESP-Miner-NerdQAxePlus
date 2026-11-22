@@ -17,6 +17,7 @@
 #include "handler_can_swarm.h"
 #include "v2/handler_v2_dashboard.h"
 #include "v2/handler_v2_settings.h"
+#include "v2/handler_v2_profiles.h"
 #include "v2/handler_v2_identify.h"
 #include "v2/handler_v2_system.h"
 #include "handler_system.h"
@@ -146,7 +147,7 @@ esp_err_t start_rest_server(void * pvParameters)
 
     httpd_config_t config = HTTPD_DEFAULT_CONFIG();
     config.uri_match_fn = httpd_uri_match_wildcard;
-    config.max_uri_handlers = 50;
+    config.max_uri_handlers = 60;
     config.lru_purge_enable = true;
     config.max_open_sockets = 10;
     config.stack_size = 12288;
@@ -227,6 +228,29 @@ esp_err_t start_rest_server(void * pvParameters)
     httpd_uri_t v2_settings_options = {
         .uri = "/api/v2/settings", .method = HTTP_OPTIONS, .handler = handle_options_request, .user_ctx = NULL};
     httpd_register_uri_handler(http_server, &v2_settings_options);
+    httpd_uri_t v2_profiles_get = {
+        .uri = "/api/v2/profiles", .method = HTTP_GET, .handler = GET_V2_profiles, .user_ctx = rest_context};
+    httpd_register_uri_handler(http_server, &v2_profiles_get);
+    httpd_uri_t v2_profiles_options = {
+        .uri = "/api/v2/profiles", .method = HTTP_OPTIONS, .handler = handle_options_request, .user_ctx = NULL};
+    httpd_register_uri_handler(http_server, &v2_profiles_options);
+
+    httpd_uri_t v2_profile_put = {
+        .uri = "/api/v2/profiles/*", .method = HTTP_PUT, .handler = PUT_V2_profile, .user_ctx = rest_context};
+    httpd_register_uri_handler(http_server, &v2_profile_put);
+    httpd_uri_t v2_profile_delete = {
+        .uri = "/api/v2/profiles/*", .method = HTTP_DELETE, .handler = DELETE_V2_profile, .user_ctx = rest_context};
+    httpd_register_uri_handler(http_server, &v2_profile_delete);
+    httpd_uri_t v2_profile_options = {
+        .uri = "/api/v2/profiles/*", .method = HTTP_OPTIONS, .handler = handle_options_request, .user_ctx = NULL};
+    httpd_register_uri_handler(http_server, &v2_profile_options);
+
+    httpd_uri_t system_set_profile_uri = {
+        .uri = "/api/system/set-profile", .method = HTTP_POST, .handler = POST_set_profile, .user_ctx = rest_context};
+    httpd_register_uri_handler(http_server, &system_set_profile_uri);
+    httpd_uri_t system_set_profile_options = {
+        .uri = "/api/system/set-profile", .method = HTTP_OPTIONS, .handler = handle_options_request, .user_ctx = NULL};
+    httpd_register_uri_handler(http_server, &system_set_profile_options);
 
     httpd_uri_t v2_identify_get = {
         .uri = "/api/v2/identify", .method = HTTP_GET, .handler = GET_V2_identify, .user_ctx = rest_context};
