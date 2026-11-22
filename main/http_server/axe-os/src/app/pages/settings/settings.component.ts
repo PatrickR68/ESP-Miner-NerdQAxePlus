@@ -26,6 +26,13 @@ export class SettingsComponent implements OnInit, OnDestroy {
 
   public deviceModel: string = "";
   public devToolsOpen: boolean = false;
+  public showEdit: boolean = true;
+
+  // a profile was activated: re-create the settings form so that it shows the new values
+  public onProfileActivated(): void {
+    this.showEdit = false;
+    setTimeout(() => { this.showEdit = true; }, 0);
+  }
 
   get isDangerZone(): boolean {
     const level = Number(localStorage.getItem('support-level') ?? 0);

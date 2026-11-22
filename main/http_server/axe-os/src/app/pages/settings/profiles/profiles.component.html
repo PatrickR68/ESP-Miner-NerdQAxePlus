@@ -1,0 +1,81 @@
+<nb-card *ngIf="loaded">
+  <nb-card-header>{{ 'PROFILES.TITLE' | translate }}</nb-card-header>
+  <nb-card-body>
+    <div class="profile-restart" *ngIf="restartRequired">
+      <span>{{ 'PROFILES.RESTART_NOTE' | translate }}</span>
+      <button nbButton size="small" status="warning" (click)="restart()">{{ 'SYSTEM.RESTART' | translate }}</button>
+    </div>
+
+    <div class="profile-tabs" role="tablist">
+      <button type="button" role="tab" class="profile-tab" *ngFor="let slot of slots"
+        [class.selected]="selected === slot" [class.empty]="!isComplete(slot)"
+        [attr.aria-selected]="selected === slot" (click)="select(slot)">
+        <span class="tab-dot" *ngIf="active === slot" [class.modified]="modified">&#9679;</span>
+        {{ tabLabel(slot) }}
+        <span class="tab-modified" *ngIf="active === slot && modified">{{ 'PROFILES.MODIFIED' | translate }}</span>
+      </button>
+    </div>
+
+    <div class="profile-panel">
+      <div class="profile-main">
+        <div class="profile-name-row">
+          <label for="profile-name">{{ 'PROFILES.NAME' | translate }}</label>
+          <input id="profile-name" nbInput fieldSize="small" type="text" [maxlength]="nameMaxLength"
+            [ngModel]="names[selected]" (ngModelChange)="setName(selected, $event)"
+            [placeholder]="tabLabel(selected)" />
+          <span class="profile-active" *ngIf="active === selected">{{ 'PROFILES.ACTIVE' | translate }}</span>
+        </div>
+        <div class="name-hint text-danger">
+          <small *ngIf="!nameValid(selected)">{{ 'PROFILES.NAME_INVALID' | translate }}</small>
+        </div>
+
+        <ng-container *ngIf="current?.complete; else emptySlot">
+          <dl class="profile-data">
+            <dt>{{ 'SETTINGS.FREQUENCY' | translate }}</dt>
+            <dd>{{ current.frequency }} MHz</dd>
+            <dt>{{ 'SETTINGS.CORE_VOLTAGE' | translate }}</dt>
+            <dd>{{ current.coreVoltage }} mV</dd>
+            <dt>{{ 'SETTINGS.POOL_MODE' | translate }}</dt>
+            <dd>{{ (current.poolMode === 1 ? 'SETTINGS.POOL_MODE_DUAL' : 'SETTINGS.POOL_MODE_FAILOVER') | translate }}</dd>
+            <ng-container *ngIf="current.poolMode === 1">
+              <dt>{{ 'SETTINGS.POOL_BALANCE' | translate }}</dt>
+              <dd>{{ current.poolBalance }} % / {{ 100 - current.poolBalance }} %</dd>
+            </ng-container>
+            <ng-container *ngFor="let fan of current.fans; let i = index">
+              <dt>{{ (i === 0 ? 'PROFILES.FAN_ASIC' : 'PROFILES.FAN_VR') | translate }}</dt>
+              <dd>{{ fanText(fan) }}</dd>
+            </ng-container>
+          </dl>
+          <div class="profile-modified-note" *ngIf="active === selected && modified">
+            {{ 'PROFILES.MODIFIED_HINT' | translate }}
+          </div>
+        </ng-container>
+        <ng-template #emptySlot>
+          <div class="profile-empty text-hint">{{ 'PROFILES.EMPTY' | translate }}</div>
+        </ng-template>
+      </div>
+
+      <div class="profile-buttons">
+        <button nbButton size="small" status="primary" [disabled]="!isComplete(selected) || matchesLive(selected)"
+          (click)="activate(selected)">
+          {{ 'PROFILES.ACTIVATE' | translate }}
+        </button>
+        <button nbButton size="small" [status]="confirmOverwrite === selected ? 'warning' : 'basic'"
+          [disabled]="!nameValid(selected) || (matchesLive(selected) && !nameChanged(selected))" (click)="saveCurrent(selected)">
+          {{ (confirmOverwrite === selected ? 'PROFILES.CONFIRM_OVERWRITE' : 'PROFILES.SAVE_CURRENT') | translate }}
+        </button>
+        <button nbButton size="small" [status]="confirmDelete === selected ? 'danger' : 'basic'"
+          [disabled]="!isComplete(selected)" (click)="deleteProfile(selected)">
+          {{ (confirmDelete === selected ? 'PROFILES.CONFIRM_DELETE' : 'PROFILES.DELETE') | translate }}
+        </button>
+        <button nbButton ghost size="small" *ngIf="confirmOverwrite === selected || confirmDelete === selected"
+          (click)="cancelConfirm()">
+          {{ 'PROFILES.CANCEL' | translate }}
+        </button>
+        <small class="profile-restart-hint" *ngIf="needsRestart(selected)">{{ 'PROFILES.RESTART_NEEDED' | translate }}</small>
+        <small class="text-hint" *ngIf="matchesLive(selected)">{{ 'PROFILES.IN_SYNC' | translate }}</small>
+      </div>
+    </div>
+    <small class="text-hint">{{ 'PROFILES.HINT' | translate }}</small>
+  </nb-card-body>
+</nb-card>
