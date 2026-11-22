@@ -1,6 +1,7 @@
 import { HttpClient, HttpEvent, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
+import { tap } from 'rxjs/operators';
 import { eASICModel } from '../models/enum/eASICModel';
 import { ISystemInfo } from '../models/ISystemInfo';
 import { IDashboardV2 } from '../models/IDashboardV2';
@@ -8,6 +9,7 @@ import { IHistory } from '../models/IHistory';
 import { IAlertSettings } from '../models/IAlertSettings';
 import { AsicInfo } from '../models/IAsicInfo';
 import { ISettingsV2 } from '../models/ISettingsV2';
+import { IProfileActivateResult, IProfileSave, IProfileSaveResult, IProfiles } from '../models/IProfiles';
 import { IIdentifyV2 } from '../models/IIdentifyV2';
 import { ISystemV2 } from '../models/ISystemV2';
 import { environment } from '../../environments/environment';
@@ -143,6 +145,9 @@ const defaultAsicInfo: AsicInfo = {
   providedIn: 'root'
 })
 export class SystemService {
+  // emits after the settings were saved successfully (the profiles card compares again then)
+  public readonly settingsChanged$ = new Subject<void>();
+
 
   constructor(
     private httpClient: HttpClient
@@ -223,7 +228,29 @@ export class SystemService {
   public updateSettingsV2(uri: string = '', update: any, totp?: string) {
     let headers = new HttpHeaders();
     if (totp) headers = headers.set('X-TOTP', totp);
-    return this.httpClient.patch(`${uri}/api/v2/settings`, update, { headers });
+    return this.httpClient.patch(`${uri}/api/v2/settings`, update, { headers }).pipe(tap(() => this.settingsChanged$.next()));
+  }
+
+  public getProfiles(uri: string = '') {
+    return this.httpClient.get<IProfiles>(`${uri}/api/v2/profiles`);
+  }
+
+  public saveProfile(uri: string = '', id: number, profile: IProfileSave, totp?: string) {
+    let headers = new HttpHeaders();
+    if (totp) headers = headers.set('X-TOTP', totp);
+    return this.httpClient.put<IProfileSaveResult>(`${uri}/api/v2/profiles/${id}`, profile, { headers });
+  }
+
+  public activateProfile(uri: string = '', id: number, totp?: string, autoRestart: boolean = true) {
+    let headers = new HttpHeaders();
+    if (totp) headers = headers.set('X-TOTP', totp);
+    return this.httpClient.post<IProfileActivateResult>(`${uri}/api/system/set-profile`, { profile: id, autoRestart }, { headers });
+  }
+
+  public deleteProfile(uri: string = '', id: number, totp?: string) {
+    let headers = new HttpHeaders();
+    if (totp) headers = headers.set('X-TOTP', totp);
+    return this.httpClient.delete(`${uri}/api/v2/profiles/${id}`, { headers });
   }
 
   public scanWifi(): Observable<{ networks: { ssid: string; rssi: number; authmode: number }[] }> {

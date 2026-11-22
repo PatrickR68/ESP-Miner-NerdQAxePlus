@@ -2,6 +2,7 @@ idf_component_register(
 SRCS
     "main.cpp"
     "nvs_config.cpp"
+    "profiles.cpp"
     "system.cpp"
     "sntp.cpp"
     "utils.cpp"
@@ -55,6 +56,7 @@ SRCS
     "./http_server/handler_ota_factory.cpp"
     "./http_server/v2/handler_v2_dashboard.cpp"
     "./http_server/v2/handler_v2_settings.cpp"
+    "./http_server/v2/handler_v2_profiles.cpp"
     "./http_server/v2/handler_v2_identify.cpp"
     "./http_server/v2/handler_v2_system.cpp"
     "./self_test/self_test.cpp"

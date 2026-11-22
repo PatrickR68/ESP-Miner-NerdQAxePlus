@@ -407,6 +407,14 @@ bool cfgHasKey(const char *path)
     return !s_doc[path].isNull();
 }
 
+void cfgRemoveKey(const char *path)
+{
+    PThreadGuard guard(s_mutex);
+    if (s_doc[path].isNull()) return;
+    s_doc.remove(path);
+    s_dirty = true;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Generic typed accessors (Step 2)
 // ═══════════════════════════════════════════════════════════════════════════

@@ -326,6 +326,135 @@ Accepts the same structure as `GET /api/v2/settings`. Pool settings use the `poo
 
 ---
 
+### Settings Profiles
+
+Three profile slots store a complete set of tuning values: ASIC frequency, core voltage, pool mode and pool balance, and both fan channels. Activating a profile copies its values into the device settings. Not part of a profile: pools and credentials, hostname/WiFi and the overheat temperature.
+
+#### `GET /api/v2/profiles`
+
+Returns all slots and the profile that was activated last.
+
+```json
+{
+  "active": 2,
+  "profiles": [
+    {
+      "id": 1,
+      "complete": true,
+      "name": "Default",
+      "frequency": 600,
+      "coreVoltage": 1120,
+      "poolMode": 1,
+      "poolBalance": 1,
+      "fans": [
+        { "mode": 2, "manualSpeed": 90, "pid": { "targetTemp": 58, "p": 6, "i": 0.1, "d": 10 } },
+        { "mode": 2, "manualSpeed": 65, "pid": { "targetTemp": 65, "p": 6, "i": 0.1, "d": 10 } }
+      ]
+    },
+    { "id": 2, "complete": false },
+    { "id": 3, "complete": false }
+  ]
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `active` | ID of the profile activated last, `0` if none. Later changes to the settings are not tracked. |
+| `id` | Slot, `1`-`3`. |
+| `complete` | `false` for an empty slot (only `id` is returned then). |
+| `name` | Optional name, may be empty. |
+| `frequency` | ASIC frequency in MHz. |
+| `coreVoltage` | Core voltage in mV. |
+| `poolMode` | `0` = failover (primary/fallback), `1` = dual pool. |
+| `poolBalance` | Share of the primary pool in percent (`1`-`99`). Only has an effect in dual pool mode. |
+| `fans[0]`, `fans[1]` | ASIC fan and voltage regulator fan. `mode`: `0` manual, `2` PID, `3` linked to the other fan (fan 1 only). |
+| `fans[].pid` | `targetTemp` in °C, `p`, `i`, `d` between `0` and `600` (stored with two decimals). |
+
+---
+
+#### `PUT /api/v2/profiles/{id}`
+
+Saves a profile into slot `{id}` (`1`-`3`) and replaces what was there. Requires OTP.
+
+All values are required, only `name` is optional. `fans` must contain exactly two entries.
+
+**Request body**:
+
+```json
+{
+  "name": "Eco",
+  "frequency": 495,
+  "coreVoltage": 1085,
+  "poolMode": 0,
+  "poolBalance": 50,
+  "fans": [
+    { "mode": 2, "manualSpeed": 90, "pid": { "targetTemp": 58, "p": 6, "i": 0.1, "d": 10 } },
+    { "mode": 3, "manualSpeed": 65, "pid": { "targetTemp": 65, "p": 6, "i": 0.1, "d": 10 } }
+  ],
+  "activate": false
+}
+```
+
+| Field | Description |
+|-------|-------------|
+| `name` | Up to 20 characters of `A-Z a-z 0-9`, space, `-` and `_`. |
+| `frequency`, `coreVoltage` | Must be within the limits of the board. |
+| `activate` | Optional, default `false`. Also activates the profile in the same request (one OTP check). |
+| `autoRestart` | Optional, default `true`. Only used together with `activate`, see `POST /api/system/set-profile`. |
+
+**Response**: `200 OK`
+
+```json
+{ "id": 1, "saved": true }
+```
+
+With `"activate": true` the response also contains `"activated": true`, `"restartRequired"` and `"restarting"` (see below).
+
+Invalid values are rejected with `400 Bad Request` and a short plain-text message, nothing is stored. Examples: `poolMode missing or invalid`, `coreVoltage above board limit`, `poolBalance must be 1-99`, `fan 0 mode must be 0 (manual) or 2 (PID)`, `name contains invalid characters (allowed: A-Z a-z 0-9 space - _)`.
+
+---
+
+#### `DELETE /api/v2/profiles/{id}`
+
+Deletes all values and the name of a profile. Requires OTP. If it was the profile activated last, `active` is reset to `0`. The settings the device is using right now are not changed. Deleting an empty slot is not an error.
+
+**Response**: `200 OK`
+
+```json
+{ "id": 1, "deleted": true }
+```
+
+---
+
+#### `POST /api/system/set-profile`
+
+Activates a stored profile: its values are copied into the device settings and the subsystems are reloaded. Requires OTP (like restart and shutdown).
+
+**Request body**:
+
+```json
+{ "profile": 2 }
+```
+
+| Field | Description |
+|-------|-------------|
+| `profile` | Slot `1`-`3`. The profile must be complete. |
+| `autoRestart` | Optional, default `true`. See below. |
+
+The pool balance is only applied if the profile uses dual pool mode.
+
+**Response**: `200 OK`
+
+```json
+{ "active": 2, "restartRequired": true, "restarting": true }
+```
+
+The pool manager is created at start-up, so a different pool mode only takes effect after a restart. If the pool mode changes, `restartRequired` is `true` and the device restarts by itself about 1.5 seconds after the response (`restarting: true`). Clients should expect the device to be offline for a while. With `"autoRestart": false` the device does not restart, `restarting` is `false` and the caller has to restart it (`POST /api/system/restart`). The web UI uses this to offer a restart button.
+
+Errors (`400 Bad Request`, plain text): `invalid profile`, `profile missing or invalid`, `profile is not complete` and the validation messages of `PUT /api/v2/profiles/{id}`.
+
+---
+
 ### Alerts (Webhook)
 
 #### `GET /api/v2/alert`

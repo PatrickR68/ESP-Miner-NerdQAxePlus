@@ -5,11 +5,13 @@ Version mismatch!<br/><br/>
 Firmware: {{ currentVersion }}<br/>
 Web-UI: {{ currentWebVersion }}<br/>
 </nb-card>
+<app-profiles (activated)="onProfileActivated()"></app-profiles>
+
 <!-- Settings Card (stays separate) -->
 <nb-card>
   <nb-card-header>{{ 'SETTINGS.TITLE' | translate }}</nb-card-header>
   <nb-card-body>
-    <app-edit></app-edit>
+    <app-edit *ngIf="showEdit"></app-edit>
   </nb-card-body>
 </nb-card>
 

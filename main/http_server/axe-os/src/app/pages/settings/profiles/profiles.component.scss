@@ -1,0 +1,141 @@
+// Tabs: colors come from the active theme (the same variables the rest of the UI uses)
+.profile-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--card-divider-color);
+}
+
+.profile-tab {
+  padding: 8px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--text-basic-color);
+  font: inherit;
+  cursor: pointer;
+
+  &.empty {
+    color: var(--text-hint-color);
+  }
+
+  &.selected {
+    font-weight: 700;
+    border-bottom-color: var(--color-primary-500, currentColor);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary-500, currentColor);
+    outline-offset: -2px;
+  }
+}
+
+.tab-dot {
+  margin-right: 4px;
+  font-size: 0.7em;
+  color: var(--color-primary-500, currentColor);
+
+  &.modified {
+    color: var(--color-warning-500);
+  }
+}
+
+.tab-modified {
+  margin-left: 4px;
+  font-size: 0.75em;
+  color: var(--color-warning-500);
+}
+
+// left: name and data, right: buttons below each other
+.profile-panel {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 16px 32px;
+  margin-bottom: 12px;
+}
+
+.profile-main {
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+.profile-buttons {
+  display: flex;
+  flex: 0 0 220px;
+  flex-direction: column;
+  gap: 8px;
+
+  button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 575px) {
+  .profile-buttons {
+    flex-basis: 100%;
+  }
+}
+
+.profile-name-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.profile-active {
+  padding: 1px 8px;
+  border: 1px solid currentColor;
+  border-radius: 10px;
+  font-size: 0.75rem;
+}
+
+// reserves one line so that nothing moves when the hint appears
+.name-hint {
+  min-height: 1.4em;
+  margin-top: 2px;
+}
+
+.profile-data {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 20px;
+  margin: 8px 0 0;
+
+  dt {
+    font-weight: 400;
+    color: var(--text-hint-color);
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.profile-modified-note {
+  margin-top: 10px;
+  font-size: 0.875rem;
+  color: var(--color-warning-500);
+}
+
+.profile-empty {
+  margin-top: 8px;
+  font-size: 0.875rem;
+}
+
+// note after a pool mode change: the device has to be restarted
+.profile-restart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+  color: var(--color-warning-500);
+}
+
+.profile-restart-hint {
+  font-size: 0.8rem;
+  color: var(--color-warning-500);
+}
